@@ -1,0 +1,54 @@
+package com.payment.personal.controllers;
+
+import com.payment.personal.models.replay.dto.CreateReplayRequest;
+import com.payment.personal.models.replay.request.CreateEventRequest;
+import com.payment.personal.models.replay.response.ReplayEventResponse;
+import com.payment.personal.models.replay.response.ReplayResponse;
+import com.payment.personal.service.replay.ReplayService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/replays")
+@RequiredArgsConstructor
+public class ReplayController {
+
+    /**
+     * this is constructor injection supported by lombok instead of
+     * {@code @Autowired} field injection. Advantages
+     * 1. Immutability
+     * 2. NPE save when cotext is not initialized but this class is loaded before
+     * 3. Early warning sign for single responsibility principle
+     * 4. Easy unit test. No need of reflection or Inject mock framework
+     */
+    private final ReplayService replayService;
+
+    @GetMapping
+    public List<ReplayResponse> getReplays() {
+        return replayService.getAllReplays();
+    }
+
+    @PostMapping
+    public ReplayResponse createReplay(
+            @RequestBody CreateReplayRequest request) {
+        return replayService.createReplay(request);
+    }
+
+    @PostMapping("/{id}/notes")
+    public void addNotes(@RequestBody CreateEventRequest createEventRequest, @PathVariable Long id) {
+        replayService.addNote(id, createEventRequest);
+    }
+
+    @GetMapping("/{id}/events")
+    public List<ReplayEventResponse> getReplayEvents(@PathVariable Long id) {
+        return replayService.getEvents(id);
+    }
+
+    @PostMapping("/{id}/photos")
+    public void addPhotos(@RequestBody MultipartFile file, @PathVariable Long id) {
+        replayService.uploadPhoto(id, file);
+    }
+}
