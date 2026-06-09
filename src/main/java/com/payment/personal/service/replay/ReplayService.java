@@ -33,4 +33,6 @@ public interface ReplayService {
     void uploadVoice(
             Long replayId,
             MultipartFile file);
+
+    void deleteEvent(Long eventId);
 }

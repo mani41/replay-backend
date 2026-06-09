@@ -6,6 +6,8 @@ import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,8 +49,31 @@ public class ReplayController {
         return replayService.getEvents(id);
     }
 
+    @DeleteMapping("/events/{id}")
+    public ResponseEntity<String> deleteEvent(@PathVariable Long id){
+        try {
+            replayService.deleteEvent(id);
+            return ResponseEntity.ok("Item deleted");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @PostMapping("/{id}/photos")
     public void addPhotos(@RequestBody MultipartFile file, @PathVariable Long id) {
         replayService.uploadPhoto(id, file);
+    }
+
+    @PostMapping(
+            value = "/{id}/audio",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<Void> uploadVoice(
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file) {
+
+        replayService.uploadVoice(id, file);
+
+        return ResponseEntity.ok().build();
     }
 }
