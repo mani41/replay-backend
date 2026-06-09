@@ -26,6 +26,6 @@ public class ReplayEvent {
     private String content;
 
     private String filePath;
-
+    
     private LocalDateTime createdAt;
 }

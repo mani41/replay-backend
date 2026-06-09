@@ -2,6 +2,7 @@ package com.payment.personal.controllers;
 
 import com.payment.personal.models.UpdateEventRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
+import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
@@ -86,5 +87,11 @@ public class ReplayController {
         return replayService.updateEvent(
                 eventId,
                 request);
+    }
+
+    @GetMapping("/{id}")
+    public ReplayResponse getReplay(
+            @PathVariable Long id) {
+        return replayService.getReplay(id);
     }
 }
