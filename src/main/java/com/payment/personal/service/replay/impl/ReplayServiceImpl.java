@@ -1,5 +1,6 @@
 package com.payment.personal.service.replay.impl;
 
+import com.payment.personal.models.UpdateEventRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
@@ -165,6 +166,20 @@ public class ReplayServiceImpl implements ReplayService {
             throw new RuntimeException(e);
         }
 
+    }
+
+    @Override
+    public ReplayEvent updateEvent(Long eventId, UpdateEventRequest request) {
+        ReplayEvent event =
+                replayEventRepository
+                        .findById(eventId)
+                        .orElseThrow();
+
+        event.setContent(
+                request.content());
+
+        return replayEventRepository
+                .save(event);
     }
 
     private void validateReplay(Long replayId) {

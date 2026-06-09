@@ -1,6 +1,8 @@
 package com.payment.personal.controllers;
 
+import com.payment.personal.models.UpdateEventRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
+import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
@@ -73,7 +75,16 @@ public class ReplayController {
             @RequestPart("file") MultipartFile file) {
 
         replayService.uploadVoice(id, file);
-
         return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/events/{eventId}")
+    public ReplayEvent updateEvent(
+            @PathVariable Long eventId,
+            @RequestBody UpdateEventRequest request) {
+
+        return replayService.updateEvent(
+                eventId,
+                request);
     }
 }

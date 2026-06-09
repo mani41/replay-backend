@@ -1,6 +1,8 @@
 package com.payment.personal.service.replay;
 
+import com.payment.personal.models.UpdateEventRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
+import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
@@ -35,4 +37,6 @@ public interface ReplayService {
             MultipartFile file);
 
     void deleteEvent(Long eventId);
+
+    ReplayEvent updateEvent(Long eventId, UpdateEventRequest request);
 }
