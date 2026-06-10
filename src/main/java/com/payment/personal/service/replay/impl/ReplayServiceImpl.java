@@ -9,8 +9,11 @@ import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
 import com.payment.personal.repository.replay.ReplayEventRepository;
 import com.payment.personal.repository.replay.ReplayRepository;
+import com.payment.personal.service.IntelligenceClient;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,10 +30,15 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class ReplayServiceImpl implements ReplayService {
 
     private final ReplayRepository replayRepository;
     private final ReplayEventRepository replayEventRepository;
+    private final IntelligenceClient intelligenceClient;
+
+    @Value("${app.storage.root}")
+    private String storageRoot;
 
     @Override
     public ReplayResponse createReplay(
@@ -142,11 +150,19 @@ public class ReplayServiceImpl implements ReplayService {
 
         String filePath = saveFile(file, "voice");
 
+        String transcript = "";
+        try {
+            transcript = intelligenceClient.transcribe(filePath);
+        } catch (Exception e) {
+            log.error("Transcription Failed", e);
+        }
+
         ReplayEvent event = ReplayEvent.builder()
                 .replayId(replayId)
                 .eventType("VOICE")
                 .filePath(filePath)
                 .createdAt(LocalDateTime.now())
+                .content(transcript)
                 .build();
 
         replayEventRepository.save(event);
@@ -190,7 +206,7 @@ public class ReplayServiceImpl implements ReplayService {
 
     private String saveFile(MultipartFile file, String folder) {
         try {
-            Path directory = Paths.get("uploads", folder);
+            Path directory = Paths.get(storageRoot, folder).toAbsolutePath();
             Files.createDirectories(directory);
             String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
             Path target = directory.resolve(fileName);
