@@ -7,6 +7,7 @@ import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
+import com.payment.personal.models.replay.response.SearchResult;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -93,5 +94,12 @@ public class ReplayController {
     public ReplayResponse getReplay(
             @PathVariable Long id) {
         return replayService.getReplay(id);
+    }
+
+    @GetMapping("/search")
+    public List<SearchResult> search(
+            @RequestParam String q) {
+
+        return replayService.search(q);
     }
 }

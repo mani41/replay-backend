@@ -6,6 +6,7 @@ import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
+import com.payment.personal.models.replay.response.SearchResult;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -39,4 +40,6 @@ public interface ReplayService {
     void deleteEvent(Long eventId);
 
     ReplayEvent updateEvent(Long eventId, UpdateEventRequest request);
+
+    List<SearchResult> search(String q);
 }

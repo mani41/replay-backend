@@ -7,6 +7,7 @@ import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
+import com.payment.personal.models.replay.response.SearchResult;
 import com.payment.personal.repository.replay.ReplayEventRepository;
 import com.payment.personal.repository.replay.ReplayRepository;
 import com.payment.personal.service.IntelligenceClient;
@@ -196,6 +197,12 @@ public class ReplayServiceImpl implements ReplayService {
 
         return replayEventRepository
                 .save(event);
+    }
+
+    @Override
+    public List<SearchResult> search(String q) {
+
+         return replayRepository.search(q);
     }
 
     private void validateReplay(Long replayId) {
