@@ -5,5 +5,6 @@ public record ReplayEventResponse(
         String eventType,
         String content,
         String filePath,
-        java.time.LocalDateTime createdAt) {
+        java.time.LocalDateTime createdAt,
+        Integer eventOrder) {
 }

@@ -28,4 +28,8 @@ public class ReplayEvent {
     private String filePath;
 
     private LocalDateTime createdAt;
+
+    private String title;
+
+    private Integer eventOrder;
 }

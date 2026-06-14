@@ -10,4 +10,8 @@ import java.util.List;
 public interface ReplayEventRepository extends JpaRepository<ReplayEvent, Long> {
     List<ReplayEvent> findByReplayIdOrderByCreatedAtAsc(
             Long replayId);
+
+    void deleteByReplayId(Long replayId);
+
+    List<ReplayEvent> findByReplayId(Long replayId);
 }

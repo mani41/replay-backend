@@ -5,6 +5,7 @@ import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
+import com.payment.personal.models.replay.response.GeneratedReplayEvents;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
 import com.payment.personal.models.replay.response.SearchResult;
@@ -26,7 +27,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
@@ -79,7 +82,7 @@ public class ReplayServiceImpl implements ReplayService {
         Replay replay = replayRepository
                 .findById(replayId)
                 .orElseThrow(() -> new RuntimeException(
-                                "Replay not found"));
+                        "Replay not found"));
 
         return new ReplayResponse(
                 replay.getId(),
@@ -119,7 +122,8 @@ public class ReplayServiceImpl implements ReplayService {
                                 event.getEventType(),
                                 event.getContent(),
                                 event.getFilePath(),
-                                event.getCreatedAt()
+                                event.getCreatedAt(),
+                                event.getEventOrder()
                         ))
                 .toList();
     }
@@ -202,7 +206,69 @@ public class ReplayServiceImpl implements ReplayService {
     @Override
     public List<SearchResult> search(String q) {
 
-         return replayRepository.search(q);
+        return replayRepository.search(q);
+    }
+
+    @Override
+    public void updateReplay(Long replayId, Replay replay) {
+        Replay dbReplay = replayRepository.getReferenceById(replayId);
+        if (!Objects.equals(dbReplay.getDescription(), replay.getDescription())
+                || !Objects.equals(dbReplay.getTitle(), replay.getTitle())) {
+            dbReplay.setTitle(replay.getTitle());
+            dbReplay.setDescription(replay.getDescription());
+        }
+    }
+
+    @Override
+    public void deleteReplay(Long replayId) {
+        //TODO: Remove photos or voice related to this replay
+        List<ReplayEvent> events = replayEventRepository.findByReplayId(replayId);
+        for (ReplayEvent event : events) {
+
+            if (event.getFilePath() != null) {
+                try {
+                    Files.deleteIfExists(
+                            Paths.get(
+                                    storageRoot,
+                                    event.getFilePath()
+                            )
+                    );
+                } catch (IOException e) {
+                    log.error("Could delete file for event: {}, Reason: {}", event.getId(), e.getMessage());
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        replayEventRepository.deleteByReplayId(replayId);
+        replayRepository.deleteById(replayId);
+    }
+
+    @Override
+    public void saveGeneratedReplayEvent(GeneratedReplayEvents generatedReplayEvent) {
+        Replay replay = Replay.builder()
+                .title(generatedReplayEvent.title())
+                .description(generatedReplayEvent.summary())
+                .build();
+
+        Replay savedReplay = replayRepository.save(replay);
+
+        AtomicInteger orderNo = new AtomicInteger(1);
+
+        List<ReplayEvent> replayEvents =
+                generatedReplayEvent.steps().stream()
+                        .map(step ->
+                                ReplayEvent.builder()
+                                        .replayId(savedReplay.getId())
+                                        .content(step.description())
+                                        .eventOrder(orderNo.getAndIncrement())
+                                        .eventType("STEP")
+                                        .title(step.title())
+                                        .build()
+                        ).toList();
+
+        replayEventRepository.saveAll(replayEvents);
+
     }
 
     private void validateReplay(Long replayId) {

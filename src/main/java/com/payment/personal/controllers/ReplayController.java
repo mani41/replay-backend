@@ -5,11 +5,13 @@ import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
+import com.payment.personal.models.replay.response.GeneratedReplayEvents;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
 import com.payment.personal.models.replay.response.SearchResult;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +43,12 @@ public class ReplayController {
     public ReplayResponse createReplay(
             @RequestBody CreateReplayRequest request) {
         return replayService.createReplay(request);
+    }
+
+    @PostMapping("/create-gen-events")
+    public ResponseEntity<String> createGeneratedReplayEvents(@RequestBody GeneratedReplayEvents generatedReplayEvent) {
+        replayService.saveGeneratedReplayEvent(generatedReplayEvent);
+        return ResponseEntity.ok("Replay Event Created");
     }
 
     @PostMapping("/{id}/notes")
@@ -101,5 +109,16 @@ public class ReplayController {
             @RequestParam String q) {
 
         return replayService.search(q);
+    }
+
+    @PutMapping("/{replayId}")
+    public ResponseEntity<String> editReplay(@PathVariable Long replayId, @RequestBody Replay replay) {
+        replayService.updateReplay(replayId, replay);
+        return ResponseEntity.ok("replay edited successfully");
+    }
+
+    @DeleteMapping("/{replayId}")
+    public void deleteReplay(@PathVariable Long replayId) {
+        replayService.deleteReplay(replayId);
     }
 }
