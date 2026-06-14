@@ -24,4 +24,7 @@ public class Replay {
     private String description;
 
     private LocalDateTime createdAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String tags;
 }

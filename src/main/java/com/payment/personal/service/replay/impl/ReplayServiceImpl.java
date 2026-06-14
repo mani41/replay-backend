@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +42,7 @@ public class ReplayServiceImpl implements ReplayService {
     private final ReplayRepository replayRepository;
     private final ReplayEventRepository replayEventRepository;
     private final IntelligenceClient intelligenceClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.storage.root}")
     private String storageRoot;
@@ -56,10 +59,17 @@ public class ReplayServiceImpl implements ReplayService {
 
         replay = replayRepository.save(replay);
 
+        List<String> tags =
+                objectMapper.readValue(
+                        replay.getTags(),
+                        new TypeReference<>() {
+                        });
+
         return new ReplayResponse(
                 replay.getId(),
                 replay.getTitle(),
-                replay.getDescription()
+                replay.getDescription(),
+                tags
         );
     }
 
@@ -68,11 +78,30 @@ public class ReplayServiceImpl implements ReplayService {
 
         return replayRepository.findAll()
                 .stream()
-                .map(replay -> new ReplayResponse(
-                        replay.getId(),
-                        replay.getTitle(),
-                        replay.getDescription()
-                ))
+                .map(replay -> {
+                            List<String> tags = List.of();
+
+                            try {
+                                if (replay.getTags() != null) {
+                                    tags = objectMapper.readValue(
+                                            replay.getTags(),
+                                            new TypeReference<>() {
+                                            });
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException(
+                                        "Failed to parse tags",
+                                        e);
+                            }
+
+                            return new ReplayResponse(
+                                    replay.getId(),
+                                    replay.getTitle(),
+                                    replay.getDescription(),
+                                    tags
+                            );
+                        }
+                )
                 .toList();
     }
 
@@ -84,10 +113,17 @@ public class ReplayServiceImpl implements ReplayService {
                 .orElseThrow(() -> new RuntimeException(
                         "Replay not found"));
 
+        List<String> tags =
+                objectMapper.readValue(
+                        replay.getTags(),
+                        new TypeReference<>() {
+                        });
+
         return new ReplayResponse(
                 replay.getId(),
                 replay.getTitle(),
-                replay.getDescription()
+                replay.getDescription(),
+                tags
         );
     }
 
@@ -123,7 +159,8 @@ public class ReplayServiceImpl implements ReplayService {
                                 event.getContent(),
                                 event.getFilePath(),
                                 event.getCreatedAt(),
-                                event.getEventOrder()
+                                event.getEventOrder(),
+                                event.getTitle()
                         ))
                 .toList();
     }
@@ -249,6 +286,7 @@ public class ReplayServiceImpl implements ReplayService {
         Replay replay = Replay.builder()
                 .title(generatedReplayEvent.title())
                 .description(generatedReplayEvent.summary())
+                .tags(objectMapper.writeValueAsString(generatedReplayEvent.tags()))
                 .build();
 
         Replay savedReplay = replayRepository.save(replay);

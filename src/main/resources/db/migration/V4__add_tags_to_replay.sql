@@ -1,0 +1,2 @@
+ALTER TABLE replay
+ADD COLUMN tags TEXT null;
