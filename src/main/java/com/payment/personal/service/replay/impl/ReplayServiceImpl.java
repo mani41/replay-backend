@@ -12,6 +12,7 @@ import com.payment.personal.models.replay.response.SearchResult;
 import com.payment.personal.repository.replay.ReplayEventRepository;
 import com.payment.personal.repository.replay.ReplayRepository;
 import com.payment.personal.service.IntelligenceClient;
+import com.payment.personal.service.embedding.EmbeddingServiceImpl;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class ReplayServiceImpl implements ReplayService {
     private final ReplayEventRepository replayEventRepository;
     private final IntelligenceClient intelligenceClient;
     private final ObjectMapper objectMapper;
+    private final EmbeddingServiceImpl embeddingService;
 
     @Value("${app.storage.root}")
     private String storageRoot;
@@ -59,11 +61,13 @@ public class ReplayServiceImpl implements ReplayService {
 
         replay = replayRepository.save(replay);
 
-        List<String> tags =
-                objectMapper.readValue(
-                        replay.getTags(),
-                        new TypeReference<>() {
-                        });
+        List<String> tags = null;
+        if (replay.getTags() != null) {
+            tags = objectMapper.readValue(
+                    replay.getTags(),
+                    new TypeReference<>() {
+                    });
+        }
 
         return new ReplayResponse(
                 replay.getId(),
@@ -141,7 +145,8 @@ public class ReplayServiceImpl implements ReplayService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        replayEventRepository.save(event);
+        //replayEventRepository.save(event);
+        saveReplayEvent(event);
     }
 
     @Override
@@ -207,7 +212,8 @@ public class ReplayServiceImpl implements ReplayService {
                 .content(transcript)
                 .build();
 
-        replayEventRepository.save(event);
+        //replayEventRepository.save(event);
+        saveReplayEvent(event);
     }
 
     @Override
@@ -236,8 +242,8 @@ public class ReplayServiceImpl implements ReplayService {
         event.setContent(
                 request.content());
 
-        return replayEventRepository
-                .save(event);
+        //return replayEventRepository.save(event);
+        return saveReplayEvent(event);
     }
 
     @Override
@@ -305,7 +311,8 @@ public class ReplayServiceImpl implements ReplayService {
                                         .build()
                         ).toList();
 
-        replayEventRepository.saveAll(replayEvents);
+        List<ReplayEvent> savedReplayEvents = replayEventRepository.saveAll(replayEvents);
+        embeddingService.generateEmbeddingsAsync(savedReplayEvents);
 
     }
 
@@ -326,5 +333,14 @@ public class ReplayServiceImpl implements ReplayService {
         } catch (Exception ex) {
             throw new RuntimeException("Unable to save file", ex);
         }
+    }
+
+    /*
+    All replay event has to go through this async vector generation on 756 dimensions
+     */
+    private ReplayEvent saveReplayEvent(ReplayEvent replayEvent) {
+        ReplayEvent savedReplayEvent = replayEventRepository.save(replayEvent);
+        embeddingService.generateEmbeddingAsync(savedReplayEvent);
+        return savedReplayEvent;
     }
 }

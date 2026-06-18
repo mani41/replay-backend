@@ -11,7 +11,6 @@ import com.payment.personal.models.replay.response.ReplayResponse;
 import com.payment.personal.models.replay.response.SearchResult;
 import com.payment.personal.service.replay.ReplayService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

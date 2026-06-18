@@ -2,9 +2,11 @@ package com.payment.personal.service;
 
 import com.payment.personal.models.intelli.TranscriptRequest;
 import com.payment.personal.models.intelli.TranscriptResponse;
+import com.payment.personal.models.replay.request.EmbeddingRequest;
 import com.payment.personal.models.replay.response.GeneratedReplayEvents;
-import com.payment.personal.models.replay.response.SummaryRequest;
+import com.payment.personal.models.replay.request.SummaryRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -21,8 +23,8 @@ public class IntelligenceClient {
 
     public IntelligenceClient() {
         this.restClient = RestClient.builder()
-                        .baseUrl("http://localhost:8000")
-                        .build();
+                .baseUrl("http://localhost:8000")
+                .build();
     }
 
     public String transcribe(
@@ -59,5 +61,14 @@ public class IntelligenceClient {
                 .body(
                         GeneratedReplayEvents.class
                 );
+    }
+
+    public double[] createEmbedding(String content) {
+        return restClient.post()
+                .uri("/embedding")
+                .body(new EmbeddingRequest(content))
+                .retrieve()
+                .body(new ParameterizedTypeReference<>() {
+                });
     }
 }
