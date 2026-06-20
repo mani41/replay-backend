@@ -50,4 +50,6 @@ public interface ReplayService {
     void deleteReplay(Long replayId);
 
     void saveGeneratedReplayEvent(GeneratedReplayEvents generatedReplayEvent);
+
+    List<ReplayEventResponse> searchSemantics(String request);
 }

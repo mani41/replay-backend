@@ -5,6 +5,7 @@ import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
 import com.payment.personal.models.replay.request.CreateEventRequest;
+import com.payment.personal.models.replay.request.EmbeddingRequest;
 import com.payment.personal.models.replay.response.GeneratedReplayEvents;
 import com.payment.personal.models.replay.response.ReplayEventResponse;
 import com.payment.personal.models.replay.response.ReplayResponse;
@@ -30,9 +31,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -314,6 +318,38 @@ public class ReplayServiceImpl implements ReplayService {
         List<ReplayEvent> savedReplayEvents = replayEventRepository.saveAll(replayEvents);
         embeddingService.generateEmbeddingsAsync(savedReplayEvents);
 
+    }
+
+    @Override
+    public List<ReplayEventResponse> searchSemantics(String query) {
+
+        double[] embeddings = embeddingService.embed(new EmbeddingRequest(query));
+
+        List<Long> eventIds =
+                embeddingService.findNearestEvents(embeddings, 5);
+
+        Map<Long, ReplayEvent> eventMap =
+                replayEventRepository
+                        .findAllById(eventIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                ReplayEvent::getId,
+                                Function.identity()));
+
+        return eventIds.stream()
+                .map(eventMap::get)
+                .filter(Objects::nonNull)
+                .map(event -> new ReplayEventResponse(
+                                event.getId(),
+                                event.getEventType(),
+                                event.getContent(),
+                                event.getFilePath(),
+                                event.getCreatedAt(),
+                                event.getEventOrder(),
+                                event.getTitle()
+                        )
+                )
+                .toList();
     }
 
     private void validateReplay(Long replayId) {

@@ -1,22 +1,17 @@
 package com.payment.personal.service.embedding;
 
 import com.payment.personal.models.replay.entity.ReplayEvent;
-import com.payment.personal.models.replay.entity.ReplayEventEmbedding;
 import com.payment.personal.models.replay.request.EmbeddingRequest;
-import com.payment.personal.repository.EmbeddingRepository;
+import com.payment.personal.repository.EmbeddingRepositoryUtility;
 import com.payment.personal.service.IntelligenceClient;
-import com.pgvector.PGvector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -24,7 +19,7 @@ import java.util.stream.Collectors;
 public class EmbeddingServiceImpl implements EmbeddingService {
 
     private final IntelligenceClient intelligenceClient;
-    private final JdbcTemplate jdbcTemplate;
+    private final EmbeddingRepositoryUtility embeddingRepositoryUtility;
 
 
     @Override
@@ -36,6 +31,12 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     @Async
     public void generateEmbeddingAsync(ReplayEvent savedReplayEvent) {
         generateAndSave(savedReplayEvent);
+    }
+
+    @Override
+    public List<Long> findNearestEvents(double[] embeddings, int limit) {
+        embeddingRepositoryUtility.cosineDistance(embeddings, limit);
+        return embeddingRepositoryUtility.findNearestEvents(embeddings, limit);
     }
 
     @Async
@@ -52,39 +53,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     private void generateAndSave(ReplayEvent event) {
         String text = buildEmbeddingText(event);
         double[] vector = intelligenceClient.createEmbedding(text);
-        String vectorStr = Arrays.stream(vector)
-                .mapToObj(String::valueOf)
-                .collect(Collectors.joining(",", "[", "]"));
-
-        jdbcTemplate.update("""
-                        INSERT INTO replay_event_embedding
-                        (
-                            replay_event_id,
-                            embedding,
-                            model,
-                            created_at
-                        )
-                        VALUES
-                        (
-                            ?,
-                            ?::vector,
-                            ?,
-                            ?
-                        )
-                        """,
-                event.getId(),
-                vectorStr,
-                "nomic-embed-text",
-                LocalDateTime.now());
-//
-//        embeddingRepository.save(
-//                ReplayEventEmbedding.builder()
-//                        .replayEventId(event.getId())
-//                        .createdAt(LocalDateTime.now())
-//                        .embedding(new PGvector(vector))
-//                        .model("nomic-embed-text")
-//                        .build()
-//        );
+        embeddingRepositoryUtility.generateAndSave(vector, event.getId());
     }
 
     private String buildEmbeddingText(
