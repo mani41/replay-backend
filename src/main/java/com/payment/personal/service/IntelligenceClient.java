@@ -1,5 +1,6 @@
 package com.payment.personal.service;
 
+import com.payment.personal.models.ImportKnowledgeRequest;
 import com.payment.personal.models.intelli.TranscriptRequest;
 import com.payment.personal.models.intelli.TranscriptResponse;
 import com.payment.personal.models.replay.request.EmbeddingRequest;
@@ -70,5 +71,13 @@ public class IntelligenceClient {
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {
                 });
+    }
+
+    public GeneratedReplayEvents generateReplayEvents(ImportKnowledgeRequest importKnowledgeRequest) {
+        return restClient.post()
+                .uri("/generate-events/import")
+                .body(new SummaryRequest(importKnowledgeRequest.text()))
+                .retrieve()
+                .body(GeneratedReplayEvents.class);
     }
 }
