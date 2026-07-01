@@ -1,5 +1,6 @@
 package com.payment.personal.controllers;
 
+import com.payment.personal.models.ChunkResponse;
 import com.payment.personal.models.ExtractTextResponse;
 import com.payment.personal.models.ImportKnowledgeRequest;
 import com.payment.personal.models.replay.response.GeneratedReplayEvents;
@@ -43,11 +44,25 @@ public class IntelligentController {
        return intelligenceClient.generateReplayEvents(importKnowledgeRequest);
     }
 
+    // debugging API
     @PostMapping(value = "/knowledge/extract",
     consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ExtractTextResponse> extractText(@RequestParam("file") MultipartFile file)
         throws IOException {
         return ResponseEntity.ok(knowledgeService.extractText(file));
+    }
+
+    // debugging API
+    @PostMapping(value = "/knowledge/chunk", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ChunkResponse> chunk(@RequestParam("file") MultipartFile file) throws IOException {
+        return ResponseEntity.ok(knowledgeService.chunkText(file));
+    }
+
+    @PostMapping(value = "/knowledge/generate-events"
+            ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GeneratedReplayEvents> generateEvents(@RequestParam("file") MultipartFile file)
+        throws IOException {
+        return ResponseEntity.ok(knowledgeService.generateEvents(file));
     }
 
 }

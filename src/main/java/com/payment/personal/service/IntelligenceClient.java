@@ -1,6 +1,8 @@
 package com.payment.personal.service;
 
 import com.payment.personal.models.ImportKnowledgeRequest;
+import com.payment.personal.models.intelli.ChunkRequest;
+import com.payment.personal.models.intelli.ReplayRequest;
 import com.payment.personal.models.intelli.TranscriptRequest;
 import com.payment.personal.models.intelli.TranscriptResponse;
 import com.payment.personal.models.replay.request.EmbeddingRequest;
@@ -13,6 +15,9 @@ import org.springframework.web.client.RestClient;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class IntelligenceClient {
@@ -79,5 +84,30 @@ public class IntelligenceClient {
                 .body(new SummaryRequest(importKnowledgeRequest.text()))
                 .retrieve()
                 .body(GeneratedReplayEvents.class);
+    }
+
+    // these steps are generated based on chunks
+    public List<String> generateSteps(String chunk) {
+
+        return restClient.post()
+                .uri("/generate-events/steps")
+                .body(new ChunkRequest(chunk))
+                .retrieve()
+                .body(new ParameterizedTypeReference<List<String>>() {});
+    }
+
+    // generated steps produced by LLM will be reorganized here
+    public GeneratedReplayEvents reorganizeSteps(Set<String> stepAssembler) {
+
+        ReplayRequest request = new ReplayRequest(new ArrayList<>(stepAssembler));
+
+        return restClient.post()
+                .uri("/generate-event/reorganize")
+                .body(request)
+                .retrieve()
+                .body(
+                        GeneratedReplayEvents.class
+                );
+
     }
 }
