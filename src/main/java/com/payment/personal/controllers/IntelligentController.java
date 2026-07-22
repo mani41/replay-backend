@@ -41,7 +41,9 @@ public class IntelligentController {
     @PostMapping("/knowledge/import")
     public GeneratedReplayEvents importKnowledge(
             @RequestBody ImportKnowledgeRequest importKnowledgeRequest) {
-       return intelligenceClient.generateReplayEvents(importKnowledgeRequest);
+       GeneratedReplayEvents generatedReplayEvents =
+               intelligenceClient.generateReplayEvents(importKnowledgeRequest);
+       return generatedReplayEvents;
     }
 
     // debugging API
