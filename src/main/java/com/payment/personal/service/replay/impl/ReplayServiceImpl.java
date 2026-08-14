@@ -1,5 +1,7 @@
 package com.payment.personal.service.replay.impl;
 
+import com.payment.personal.auth.dto.User;
+import com.payment.personal.auth.service.AuthenticationService;
 import com.payment.personal.models.UpdateEventRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
@@ -26,6 +28,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,18 +52,21 @@ public class ReplayServiceImpl implements ReplayService {
     private final IntelligenceClient intelligenceClient;
     private final ObjectMapper objectMapper;
     private final EmbeddingServiceImpl embeddingService;
+    private final AuthenticationService authenticationService;
 
     @Value("${app.storage.root}")
     private String storageRoot;
 
     @Override
     public ReplayResponse createReplay(
-            CreateReplayRequest request) {
+            CreateReplayRequest request) throws AccessDeniedException {
 
+        User user = authenticationService.getCurrentUser();
         Replay replay = Replay.builder()
                 .title(request.title())
                 .description(request.description())
                 .createdAt(LocalDateTime.now())
+                .user(user)
                 .build();
 
         replay = replayRepository.save(replay);
@@ -82,9 +88,9 @@ public class ReplayServiceImpl implements ReplayService {
     }
 
     @Override
-    public List<ReplayResponse> getAllReplays() {
+    public List<ReplayResponse> getAllReplays(UUID userId) {
 
-        return replayRepository.findAll()
+        return replayRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
                 .map(replay -> {
                             List<String> tags = List.of();

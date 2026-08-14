@@ -1,7 +1,8 @@
 package com.payment.personal.controllers;
 
+import com.payment.personal.auth.dto.User;
+import com.payment.personal.auth.service.AuthenticationService;
 import com.payment.personal.models.UpdateEventRequest;
-import com.payment.personal.models.intelli.SemanticSearchRequest;
 import com.payment.personal.models.replay.dto.CreateReplayRequest;
 import com.payment.personal.models.replay.entity.Replay;
 import com.payment.personal.models.replay.entity.ReplayEvent;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @RestController
@@ -33,15 +35,17 @@ public class ReplayController {
      * 4. Easy unit test. No need of reflection or Inject mock framework
      */
     private final ReplayService replayService;
+    private final AuthenticationService authenticationService;
 
     @GetMapping
-    public List<ReplayResponse> getReplays() {
-        return replayService.getAllReplays();
+    public List<ReplayResponse> getReplays() throws AccessDeniedException {
+        User currentUser = authenticationService.getCurrentUser();
+        return replayService.getAllReplays(currentUser.getId());
     }
 
     @PostMapping
     public ReplayResponse createReplay(
-            @RequestBody CreateReplayRequest request) {
+            @RequestBody CreateReplayRequest request) throws AccessDeniedException {
         return replayService.createReplay(request);
     }
 

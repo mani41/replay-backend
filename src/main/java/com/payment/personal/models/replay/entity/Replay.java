@@ -1,5 +1,6 @@
 package com.payment.personal.models.replay.entity;
 
+import com.payment.personal.auth.dto.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,4 +28,8 @@ public class Replay {
 
     @Column(columnDefinition = "TEXT")
     private String tags;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

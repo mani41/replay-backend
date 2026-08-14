@@ -4,11 +4,14 @@ import com.google.firebase.auth.FirebaseToken;
 import com.payment.personal.auth.dto.AuthRequest;
 import com.payment.personal.auth.dto.AuthResponse;
 import com.payment.personal.auth.dto.User;
+import com.payment.personal.auth.service.AuthenticationService;
 import com.payment.personal.auth.service.FirebaseAuthService;
 import com.payment.personal.auth.service.JwtService;
 import com.payment.personal.auth.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.file.AccessDeniedException;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,5 +34,12 @@ public class AuthController {
         String jwt = jwtService.generateToken(user);
 
         return new AuthResponse(jwt);
+    }
+
+    private final AuthenticationService authenticationService;
+
+    @GetMapping("/me")
+    public User me() throws AccessDeniedException {
+        return authenticationService.getCurrentUser();
     }
 }
