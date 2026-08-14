@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -33,7 +35,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
+        log.info("JWT FILTER: {} {}", request.getMethod(), request.getRequestURI());
+
         final String authHeader = request.getHeader("Authorization");
+
+        log.info("JWT FILTER Authorization present: {}", authHeader != null);
 
         // No Authorization header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -45,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Invalid token
         if (!jwtService.isValid(jwt)) {
+            log.info("JWT FILTER: TOKEN INVALID");
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,6 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Optional<User> optionalUser = userRepository.findById(userId);
 
         if (optionalUser.isEmpty()) {
+            log.info("JWT FILTER: USER NOT FOUND: {}", userId);
             filterChain.doFilter(request, response);
             return;
         }
@@ -72,6 +80,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        log.info("JWT FILTER: authentication SUCCESS");
 
         filterChain.doFilter(request, response);
     }
