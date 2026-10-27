@@ -32,9 +32,9 @@ public class IntelligenceClient {
 
     private final RestClient restClient;
 
-    public IntelligenceClient() {
+    public IntelligenceClient(@Value("${intelligence.service.url}") String baseUrl) {
         this.restClient = RestClient.builder()
-                .baseUrl("http://localhost:8000")
+                .baseUrl(baseUrl)
                 .build();
     }
 

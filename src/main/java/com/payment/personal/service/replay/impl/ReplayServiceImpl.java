@@ -299,10 +299,17 @@ public class ReplayServiceImpl implements ReplayService {
 
     @Override
     public void saveGeneratedReplayEvent(GeneratedReplayEvents generatedReplayEvent) {
+        User currentUser;
+        try {
+            currentUser = authenticationService.getCurrentUser();
+        } catch (AccessDeniedException e) {
+            throw new RuntimeException(e);
+        }
         Replay replay = Replay.builder()
                 .title(generatedReplayEvent.title())
                 .description(generatedReplayEvent.summary())
                 .tags(objectMapper.writeValueAsString(generatedReplayEvent.tags()))
+                .user(currentUser)
                 .build();
 
         Replay savedReplay = replayRepository.save(replay);
